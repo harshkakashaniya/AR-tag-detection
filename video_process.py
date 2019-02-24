@@ -111,11 +111,23 @@ def FrameCapture(path,template):
         print(corner_y_min_y)
         print(corner_y_max_x)
         print(corner_y_max_y)
-        cv2.circle(image,(corner_x_min_x,corner_x_min_y),1,(255,0,0),5)
-        cv2.circle(image,(corner_y_min_x,corner_y_min_y),1,(255,0,0),5)
+        cv2.circle(image,(corner_x_min_x,corner_x_min_y),1,(0,255,0),5)
+        cv2.circle(image,(corner_y_min_x,corner_y_min_y),1,(0,255,0),5)
         cv2.circle(image,(corner_x_max_x,corner_x_max_y),1,(255,0,0),5)
         cv2.circle(image,(corner_y_max_x,corner_y_max_y),1,(255,0,0),5)
 
+        slope_max=math.atan(abs(corner_x_max_y-corner_y_max_y)/abs(corner_x_max_x-corner_y_max_x))*(7*180)/22
+        slope_min=math.atan(abs(corner_x_min_y-corner_y_min_y)/abs(corner_x_min_x-corner_y_min_x))*(7*180)/22
+        slope_avg=(slope_max+slope_min)/2
+
+        aaa_max=str(round(slope_max,2))+'max_slope'
+        aaa_min=str(round(slope_min,2))+'min_slope'
+        aaa_avg=str(round(slope_avg,2))+'avg_slope'
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(image,aaa_max,(10,100), font, 1,(255,255,255),2,cv2.LINE_AA)
+        cv2.putText(image,aaa_min,(10,200), font, 1,(255,255,255),2,cv2.LINE_AA)
+        cv2.putText(image,aaa_avg,(10,300), font, 1,(0,0,0),2,cv2.LINE_AA)
 
 
 
