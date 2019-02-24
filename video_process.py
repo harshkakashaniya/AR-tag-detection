@@ -10,13 +10,14 @@ except:
 import cv2
 
 # Function to extract frames
-def FrameCapture(path):
+def FrameCapture(path,template):
 
     # Path to video file
     vidObj = cv2.VideoCapture(path)
     # Used as counter variable
     count = 0
     success = 1
+    x_offset=y_offset=30
     img_array=[]
     lower = np.array([10, 20, 10], dtype = "uint8")
     upper = np.array([200, 200, 200], dtype = "uint8")
@@ -122,13 +123,34 @@ def FrameCapture(path):
             x,y = i.ravel()
             #cv2.circle(image,(x,y),3,(0,255,0),-1)
         count += 1
+
         print(count)
+        image[corner_x_min_y:corner_x_min_y+template.shape[0], corner_x_min_x:corner_x_min_x+template.shape[0]] = template
+        x_offset+=20
 
         img_array.append(image)
 
     return img_array,size
 
 #--------------------------------------------------------------
+'''
+#superimpose
+def Superimpose(img_array,template):
+    for i in range(0,len(img_array)):
+        #strr=str(i).join(['frame', '.jpg'])
+        #print(strr)
+        l = cv2.imread(img_array[i])
+        #rotated = imutils.rotate(s, angle)
+
+
+        x_offset+=20
+        l[y_offset:y_offset+template.shape[0], x_offset:x_offset+template.shape[1]] = template
+        #new=cv2.imwrite("newframe%d.jpg" % count, l)
+        Super_Image.append(l)
+        count+=1
+        angle+=30
+    return Super_Image
+'''
 #video file
 def video(img_array,size):
     video=cv2.VideoWriter('video.avi',cv2.VideoWriter_fourcc(*'DIVX'), 5.0,size)
@@ -141,5 +163,10 @@ def video(img_array,size):
 if __name__ == '__main__':
 
     # Calling the function
-    Image,size=FrameCapture('Tag0.mp4')
+    Super_Image=[]
+    x_offset=y_offset=30
+    template = cv2.imread('Lena.png',-1)
+    resized=cv2.resize(template,dsize=None,fx=0.39,fy=0.39)
+    Image,size=FrameCapture('Tag0.mp4',resized)
+    #Super_Image=Superimpose(Image,template)
     video(Image,size)
