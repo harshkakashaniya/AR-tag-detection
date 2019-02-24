@@ -175,8 +175,6 @@ def video(img_array,size):
 if __name__ == '__main__':
 
     # Calling the function
-    Super_Image=[]
-    x_offset=y_offset=30
     template = cv2.imread('Lena.png',-1)
     resized=cv2.resize(template,dsize=None,fx=0.39,fy=0.39)
     Image,size=FrameCapture('Tag0.mp4',resized)
