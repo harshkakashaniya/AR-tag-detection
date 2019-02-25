@@ -56,14 +56,14 @@ def Extractedges(image,lower,upper):
 
 def cornerpoint(a_x_old,a_y_old,edge_matrix):
     difference_x=abs(a_x_old-edge_matrix[:,0])
-    if(min(difference_x)<10):
+    y_deviation=abs(a_y_old-edge_matrix[int(np.argmin(difference_x)),1])
+    if(min(difference_x)<10 and y_deviation<10):
         a_x=edge_matrix[int(np.argmin(difference_x)),0]
         a_y=edge_matrix[int(np.argmin(difference_x)),1]
     else:
         a_x=a_x_old
         a_y=a_y_old
     return a_x ,a_y
-
 
 def initializecorners(edge_matrix):
     a_x_old=edge_matrix[0,0]
@@ -154,8 +154,6 @@ def edgesplotter(src,image,corners,count,a_x_old,a_y_old,b_x_old,b_y_old,c_x_old
 
     return image,angle_max,angle_min,angle_avg,edge_matrix,a_x_old,a_y_old,b_x_old,b_y_old,c_x_old,c_y_old,d_x_old,d_y_old
 
-
-
 def printslope(image,angle_max,angle_min,angle_avg,corners):
     font = cv2.FONT_HERSHEY_SIMPLEX
     cv2.putText(image,angle_max,(10,100), font, 1,(255,255,255),2,cv2.LINE_AA)
@@ -184,7 +182,7 @@ def Imageprocessor(path,src):
     c=0
     d=0
 
-    while (success and count<100):
+    while (success and count<500):
 
         success, image = vidObj.read()
 
@@ -216,7 +214,6 @@ def Imageprocessor(path,src):
         img_array.append(image)
 
     return img_array,size
-
 #--------------------------------------------------------------
 #video file
 def video(img_array,size):
