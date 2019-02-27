@@ -197,7 +197,7 @@ def edgesplotter(src,image,corners,count,a_x_old,a_y_old,b_x_old,b_y_old,c_x_old
 
     return image,angle_max,angle_min,angle_avg,edge_matrix,a_x_old,a_y_old,b_x_old,b_y_old,c_x_old,c_y_old,d_x_old,d_y_old,h
 
-def draw(img, imgpts):
+#def draw(img, imgpts):
     imgpts = np.int32(imgpts).reshape(-1,2)
     # draw ground floor in green
     img = cv2.drawContours(img, [imgpts[:4]],-1,(0,255,0),-3)
@@ -209,7 +209,7 @@ def draw(img, imgpts):
     return img
 
 
-def transform_mat(h,image,corner_x_min_x,corner_x_min_y,corner_y_min_x,corner_y_min_y,corner_y_max_x,corner_y_max_y):
+#def transform_mat(h,image,corner_x_min_x,corner_x_min_y,corner_y_min_x,corner_y_min_y,corner_y_max_x,corner_y_max_y):
     Kdash =[[1406.08415449821,0,0], [2.20679787308599, 1417.99930662800,0],[1014.13643417416, 566.347754321696,1]]
     K=np.transpose(Kdash)
     #pts_dst = np.array([[a_x, a_y], [b_x, b_y], [c_x, c_y],[d_x, d_y]])
@@ -275,7 +275,7 @@ def Imageprocessor(path,src):
 
         image,angle_max,angle_min,angle_avg,edge_matrix,a_x_old,a_y_old,b_x_old,b_y_old,c_x_old,c_y_old,d_x_old,d_y_old,h=edgesplotter(src,image,corners,count,a_x_old,a_y_old,b_x_old,b_y_old,c_x_old,c_y_old,d_x_old,d_y_old)
 
-        image=transform_mat(h,image,a_x_old,a_y_old,b_x_old,b_y_old,c_x_old,c_y_old)
+        #image=transform_mat(h,image,a_x_old,a_y_old,b_x_old,b_y_old,c_x_old,c_y_old)
 
 
         image=printslope(image,angle_max,angle_min,angle_avg,corners)
@@ -300,7 +300,7 @@ def video(img_array,size):
 if __name__ == '__main__':
 
     # Calling the function
-    src=cv2.imread('lena.jpg')
+    src=cv2.imread('Lena.jpg')
     #src=cv2.resize(src_raw, dsize=None, fx=0.25, fy=0.25)
     Image,size=Imageprocessor('Tag0.mp4',src)
     video(Image,size)
