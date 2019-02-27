@@ -12,6 +12,15 @@ except:
 import cv2
 #-------------------------------------------------------------------------------
 
+def binary(A):
+    for i in range(0,len(A)):
+        for j in range(0,len(A[0])):
+            if (A[i,j]>150):
+                A[i,j]=1
+            else:
+                A[i,j]=0
+    return A
+
 def Edgedetection(image,old_ctr):
 
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
@@ -46,29 +55,125 @@ def Superimposing(ctr,image,src):
 
     return image
 
-def perspectivetransform(ctr):
+def perspective_for_tag(ctr,image):
     dst1 = np.array([
         [0, 0],
         [100, 0],
         [100, 100],
         [0, 100]], dtype = "float32")
 
-    # calculate the perspective transform matrix and warp
-    # the perspective to grab the screen
-    M1 = cv2.getPerspectiveTransform(ctr, dst1)
-
+    M1,status = cv2.findHomography(ctr[0], dst1)
     warp1 = cv2.warpPerspective(image.copy(), M1, (100,100))
-    warp2 = warp1.copy()
-    cv2.imshow("warp",warp1)
-    cv2.imshow("corner detction",ar)
+    warp2=cv2.medianBlur(warp1,3)
+    #warp2= warp1-warp1_5
 
-def Tag_id_detection(ctr):
+    tag_image=cv2.resize(warp2, dsize=None, fx=0.08, fy=0.08)
 
-    return 0
+    return tag_image
 
-def Orientation(ctr):
+def homography_calc(src,dest):
+    c1 = tag_des[0]
+    c2 = tag_des[1]
+    c3 = tag_des[2]
+    c4 = tag_des[3]
 
-    return 0
+    w1 = src[0]
+    w2 = src[1]
+    w3 = src[2]
+    w4 = src[3]
+
+    A=np.array([[w1[0],w1[1],1,0,0,0,-c1[0]*w1[0],-c1[0]*w1[1],-c1[0]],
+                [0,0,0,w1[0], w1[1],1,-c1[1]*w1[0],-c1[1]*w1[1],-c1[1]],
+                [w2[0],w2[1],1,0,0,0,-c2[0]*w2[0],-c2[0]*w2[1],-c2[0]],
+                [0,0,0,w2[0], w2[1],1,-c2[1]*w2[0],-c2[1]*w2[1],-c2[1]],
+                [w3[0],w3[1],1,0,0,0,-c3[0]*w3[0],-c3[0]*w3[1],-c3[0]],
+                [0,0,0,w3[0], w3[1],1,-c3[1]*w3[0],-c3[1]*w3[1],-c3[1]],
+                [w4[0],w4[1],1,0,0,0,-c4[0]*w4[0],-c4[0]*w4[1],-c4[0]],
+                [0,0,0,w4[0], w4[1],1,-c4[1]*w4[0],-c4[1]*w4[1],-c4[1]]])
+
+    #Performing SVD
+    u, s, vt = la.svd(A)
+
+            # normalizing by last element of v
+            #v =np.transpose(v_col)
+    v = vt[8:,]/vt[8][8]
+
+    req_v = np.reshape(v,(3,3))
+
+    return req_v
+
+def Tag_id_detection(ctr,tag_image):
+    gray = cv2.cvtColor(tag_image,cv2.COLOR_BGR2GRAY)
+    pixel_value=binary(gray)
+    A_ctr=ctr[0][0]
+    print(A_ctr,'ctr A')
+    B_ctr=ctr[0][1]
+    print(B_ctr,'ctr B')
+    C_ctr=ctr[0][2]
+    print(C_ctr,'ctr B')
+    D_ctr=ctr[0][3]
+    print(D_ctr,'ctr C')
+    if (pixel_value[2,2] == 1):
+        L1=A_ctr
+        L2=B_ctr
+        L3=C_ctr
+        L4=D_ctr
+
+        one = pixel_value[4,4]
+        two = pixel_value[4,3]
+        three = pixel_value[3,3]
+        four = pixel_value[3,4]
+
+    elif pixel_value[5,2]==1:
+        L1=D_ctr
+        L2=A_ctr
+        L3=B_ctr
+        L4=C_ctr
+        one = pixel_value[3,4]
+        two = pixel_value[4,4]
+        three = pixel_value[4,3]
+        four = pixel_value[3,3]
+
+    elif pixel_value[5,5] == 1:
+        L1=C_ctr
+        L2=D_ctr
+        L3=A_ctr
+        L4=B_ctr
+        one = pixel_value[3,3]
+        two = pixel_value[3,4]
+        three = pixel_value[4,4]
+        four = pixel_value[4,3]
+
+    elif pixel_value[2,5] == 1:
+        L1=B_ctr
+        L2=C_ctr
+        L3=D_ctr
+        L4=A_ctr
+        one = pixel_value[4,3]
+        two = pixel_value[3,3]
+        three = pixel_value[3,4]
+        four = pixel_value[4,4]
+
+    else:
+        L1=A_ctr
+        L2=B_ctr
+        L3=C_ctr
+        L4=D_ctr
+
+        one = pixel_value[4,4]
+        two = pixel_value[4,3]
+        three = pixel_value[3,3]
+        four = pixel_value[3,4]
+
+
+    new_ctr=np.array([[L1,L2,L3,L4]])
+
+    print(new_ctr,'new_ctr')
+
+    tag_id = four*8 + three*4 + two*2 + one*1
+
+    return new_ctr,tag_id
+
 
 def Three_d_cube():
 
@@ -96,14 +201,14 @@ def Imageprocessor(path,src):
         print(np.shape(image))
         if (count==0):
             old_corners=0
-        if (count==0):
-            old_corners=0
         corners=Edgedetection(image,old_corners)
-
         if(len(corners)==0):
             corners=old_corners
-        image=Superimposing(corners,image,src)
-        #perspective(corners)
+
+        tag_image=perspective_for_tag(corners,image)
+        new_corners,tag_id=Tag_id_detection(corners,tag_image)
+
+        image=Superimposing(new_corners,image,src)
         old_corners=corners
         count += 1
         print(count)
@@ -127,5 +232,5 @@ if __name__ == '__main__':
     # Calling the function
     src=cv2.imread('lena.jpg')
     print(np.size(src))
-    Image,size=Imageprocessor('Tag2.mp4',src)
+    Image,size=Imageprocessor('Tag0.mp4',src)
     video(Image,size)
