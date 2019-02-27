@@ -2,9 +2,11 @@ import argparse
 import numpy as np
 import os, sys
 from numpy import linalg as LA
+from numpy import linalg as la
 import math
 from PIL import Image
 import random
+
 try:
     sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 except:
@@ -53,7 +55,7 @@ def Superimposing(ctr,image,src):
 
     image = image + temp;
 
-    return image
+    return image,h
 
 def perspective_for_tag(ctr,image):
     dst1 = np.array([
@@ -105,6 +107,7 @@ def homography_calc(src,dest):
 def Tag_id_detection(ctr,tag_image):
     gray = cv2.cvtColor(tag_image,cv2.COLOR_BGR2GRAY)
     pixel_value=binary(gray)
+    status=0
     A_ctr=ctr[0][0]
     print(A_ctr,'ctr A')
     B_ctr=ctr[0][1]
@@ -118,7 +121,7 @@ def Tag_id_detection(ctr,tag_image):
         L2=B_ctr
         L3=C_ctr
         L4=D_ctr
-
+        status=0
         one = pixel_value[4,4]
         two = pixel_value[4,3]
         three = pixel_value[3,3]
@@ -129,6 +132,7 @@ def Tag_id_detection(ctr,tag_image):
         L2=A_ctr
         L3=B_ctr
         L4=C_ctr
+        status=1
         one = pixel_value[3,4]
         two = pixel_value[4,4]
         three = pixel_value[4,3]
@@ -139,6 +143,7 @@ def Tag_id_detection(ctr,tag_image):
         L2=D_ctr
         L3=A_ctr
         L4=B_ctr
+        status=2
         one = pixel_value[3,3]
         two = pixel_value[3,4]
         three = pixel_value[4,4]
@@ -149,6 +154,7 @@ def Tag_id_detection(ctr,tag_image):
         L2=C_ctr
         L3=D_ctr
         L4=A_ctr
+        status=3
         one = pixel_value[4,3]
         two = pixel_value[3,3]
         three = pixel_value[3,4]
@@ -159,7 +165,6 @@ def Tag_id_detection(ctr,tag_image):
         L2=B_ctr
         L3=C_ctr
         L4=D_ctr
-
         one = pixel_value[4,4]
         two = pixel_value[4,3]
         three = pixel_value[3,3]
@@ -174,10 +179,46 @@ def Tag_id_detection(ctr,tag_image):
 
     return new_ctr,tag_id
 
+def draw(img, imgpts):
+    imgpts = np.int32(imgpts).reshape(-1,2)
+    # draw ground floor in green
+    img = cv2.drawContours(img, [imgpts[:4]],-1,(0,255,0),-3)
+    # draw pillars in blue color
+    for i,j in zip(range(4),range(4,8)):
+        img = cv2.line(img, tuple(imgpts[i]), tuple(imgpts[j]),(255),3)
+        # draw top layer in red color
+        img = cv2.drawContours(img, [imgpts[4:]],-1,(0,0,255),3)
+    return img
 
-def Three_d_cube():
 
-    return 0
+def Projection_mat(homography):
+   # homography = homography*(-1)
+   # Calling the projective matrix function
+   K =np.array([[1406.08415449821,0,0],
+       [ 2.20679787308599, 1417.99930662800,0],
+       [ 1014.13643417416, 566.347754321696,1]])
+
+   K=K.T
+   rot_trans = np.dot(la.inv(K), homography)
+   col_1 = rot_trans[:, 0]
+   col_2 = rot_trans[:, 1]
+   col_3 = rot_trans[:, 2]
+   l = math.sqrt(la.norm(col_1, 2) * la.norm(col_2, 2))
+   rot_1 = col_1 / l
+   rot_2 = col_2 / l
+   translation = col_3 / l
+   c = rot_1 + rot_2
+   p = np.cross(rot_1, rot_2)
+   d = np.cross(c, p)
+   rot_1 = np.dot(c / np.linalg.norm(c, 2) + d / np.linalg.norm(d, 2), 1 / math.sqrt(2))
+   rot_2 = np.dot(c / np.linalg.norm(c, 2) - d / np.linalg.norm(d, 2), 1 / math.sqrt(2))
+   rot_3 = np.cross(rot_1, rot_2)
+
+   projection = np.stack((rot_1, rot_2, rot_3, translation)).T
+   return np.dot(K, projection)
+
+    #def Three_d_cube(K, homography):
+    #    return 0
 
 
 #-------------------------------------------------------------------------------
@@ -208,7 +249,70 @@ def Imageprocessor(path,src):
         tag_image=perspective_for_tag(corners,image)
         new_corners,tag_id=Tag_id_detection(corners,tag_image)
 
-        image=Superimposing(new_corners,image,src)
+
+        image,h=Superimposing(new_corners,image,src)
+        proj_mat=Projection_mat(h)
+
+
+
+##########################################33
+
+        print("Projection matrix: \n", proj_mat)
+
+        axis = np.float32([[0,0,0,1],[0,512,0,1],[512,512,0,1],[512,0,0,1],[0,0,-512,1],[0,512,-512,1],[512,512,-512,1],[512,0,-512,1]])
+        x_c1= np.matmul(axis,proj_mat.T)
+        print("sdcscd:", axis.shape)
+        print("dcdscssdc:", proj_mat.shape)
+        print("cube: \n",x_c1)
+        print(type(x_c1))
+
+        # Reshaping the cube matrix:
+
+        div1 = x_c1[0][2]
+        div2 = x_c1[1][2]
+        div3 = x_c1[2][2]
+        div4 = x_c1[3][2]
+        div5 = x_c1[4][2]
+        div6 = x_c1[5][2]
+        div7 = x_c1[6][2]
+        div8 = x_c1[7][2]
+
+
+        out1 = np.divide(x_c1[0],div1)
+        out2 = np.divide(x_c1[1],div2)
+        out3 = np.divide(x_c1[2],div3)
+        out4 = np.divide(x_c1[3],div4)
+        out5 = np.divide(x_c1[4],div5)
+        out6 = np.divide(x_c1[5],div6)
+        out7 = np.divide(x_c1[6],div7)
+        out8 = np.divide(x_c1[7],div8)
+
+        x_c1 = np.vstack((out1,out2,out3,out4,out5,out6,out7,out8))
+
+        print("Renewed cube coord:", x_c1)
+        new_xc1 = np.array([[x_c1[0][0], x_c1[0][1]],
+                    [x_c1[1][0], x_c1[1][1]],
+                    [x_c1[2][0], x_c1[2][1]],
+                    [x_c1[3][0], x_c1[3][1]],
+                    [x_c1[4][0], x_c1[4][1]],
+                    [x_c1[5][0], x_c1[5][1]],
+                    [x_c1[6][0], x_c1[6][1]],
+                    [x_c1[7][0], x_c1[7][1]]])
+        print(new_xc1)
+        draw(image, new_xc1)
+
+
+###############################################3
+
+
+
+
+
+
+
+
+
+
         old_corners=corners
         count += 1
         print(count)
@@ -220,7 +324,7 @@ def Imageprocessor(path,src):
 #--------------------------------------------------------------
 #video file
 def video(img_array,size):
-    video=cv2.VideoWriter('video2.avi',cv2.VideoWriter_fourcc(*'DIVX'), 25.0,size)
+    video=cv2.VideoWriter('video2.avi',cv2.VideoWriter_fourcc(*'DIVX'), 16.0,size)
     #print(np.shape(img_array))
     for i in range(len(img_array)):
         video.write(img_array[i])
@@ -232,5 +336,5 @@ if __name__ == '__main__':
     # Calling the function
     src=cv2.imread('lena.jpg')
     print(np.size(src))
-    Image,size=Imageprocessor('Tag0.mp4',src)
+    Image,size=Imageprocessor('Tag1.mp4',src)
     video(Image,size)
