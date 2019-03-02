@@ -1,3 +1,4 @@
+## AR Tag Detection and Tracking
 The project focuses on detecting a custom AR Tag (a form of fiducial marker), that is used for
 obtaining a point of reference in the real world, such as in augmented reality applications. The two aspects
 to using an AR Tag: detection and tracking, has been implemented in this project. Following are the 2
@@ -6,11 +7,11 @@ stages:
 * **Tracking**: Involves keeping the tag in “view” throughout the sequence and performing image
 processing operations based on the tag’s orientation and position (a.k.a. the pose).
 
-Prior to the implementation of image processing on the image sequence, the video is split into its image frames using `cv.VideoCapture`, and once the operations are performed on each of the frames, it is appended into an array. This image array is then used to get the video back using `cv.VideoWriter`
+Prior to the implementation of image processing on the image sequence, the video is split into its image frames using `cv2.VideoCapture`, and once the operations are performed on each of the frames, it is appended into an array. This image array is then used to get the video back using `cv2.VideoWriter`
 
 Following is the reference AR Tag that has to be detected and tracked:
 
-[Reference AR Tag to be detected and tracked](Images/ref_marker.png)
+![Reference AR Tag to be detected and tracked](Images/ref_marker.png)
 
 ## Edge Detection of AR tag
 
@@ -40,20 +41,20 @@ The process of the edge and corner detection has been implemented in the followi
 can been computed and returns the new coordinates of the detected corners. This is repeated for each
 image frame.
 * The Computer Vision methods made use of in the above implementation are:
-  - cvtColor
-  - medianBlur
-  - threshold
-  - findContours
-  - arcLength
-  - approxPolyDP
-  - contourArea
-  - isContourConvex
+  - `cv2.cvtColor`
+  - `cv2.medianBlur`
+  - `cv2.threshold`
+  - `cv2.findContours`
+  - `cv2arcLength`
+  - `cv2.approxPolyDP`
+  - `cv2.contourArea`
+  - `cv2.isContourConvex`
 * Once the Corners are successfully detected, the perspective transformation of the Tag is performed.
 The function `perspective for tag` has been scripted to get the transformed and resized tag image.
 The methods used for the transformation are:
-  - findHomography
-  - warpPerspective
-  - resize
+  - `cv2.findHomography`
+  - `cv2.warpPerspective`
+  - `cv2.resize`
 * After the above successful transformation the ID of the tag is obtained, the corners of the tag as well
 as its ID with respect to its original orientation i.e compensated for any camera rotation is obatined.
 * The above process has been written in Python using several functionalities of Computer Vision such
@@ -86,7 +87,7 @@ the tag is “replaced” with the transformed image.
 * This also implies that the orientation of the transformed template image must match that of the tag at
 any given frame, which has been taken care using efficient corner, contour and edge detection techniques
 to get the correct orientation of the AR tag at any given time.
-* The above has been achieved using the calculated homography matrix to get the `warpPerspective` along with the CV function `fillConexPoly`.
+* The above has been achieved using the calculated homography matrix to get the `cv2.warpPerspective` along with the CV function `cv2.fillConvexPoly`.
 
 ### Output Images:
 
@@ -117,7 +118,7 @@ shown in the code, and thus the projection matrix, P = K[R|t] is constructed.
 * Assuming that the virtual cube is sitting on “top” of the marker, and that the Z axis is negative in the
 upwards direction, we have obtained the coordinates of the other four corners of the cube.  This allows
 the transformation of all the corners of the cube onto the image plane using the projection matrix.
-* The cube is then drawn using `cv.drawContours`
+* The cube is then drawn using `cv2.drawContours`
 
 The implementation of all of the above steps has been clearly shown in the code.
 The following screenshot of video shows the Placement of the virtual 3D cube on the AR Tag.
@@ -138,6 +139,6 @@ Contours and various detection algorithms.
 
 ## Authors
 
-Koyal Bhartia - Graduate Student in University of Maryland with majors in Robotics. Interested in Computer Vision and Machine Learning of Autonomous robots
+**Koyal Bhartia**([Koyal-Bhartia](https://github.com/Koyal-Bhartia)) - Graduate Student in University of Maryland with majors in Robotics. Interested in Computer Vision and Machine Learning of Autonomous robots
 
-Harsh Kakashaniya - Graduate Student in University of Maryland with majors in Robotics. Interested in Medical, Mobile and Agriculture robotics.
+Harsh Kakashaniya([harshkakashaniya](https://github.com/harshkakashaniya)) - Graduate Student in University of Maryland with majors in Robotics. Interested in Medical, Mobile and Agriculture robotics.
